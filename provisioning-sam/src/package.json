@@ -5,7 +5,10 @@
   "repository": "https://github.com/aws-quickstart/quickstart-onica-connected-camera/provisioning-sam",
   "author": "Onica",
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.5"
+  },
   "scripts": {
     "test": "mocha tests/unit/"
   },

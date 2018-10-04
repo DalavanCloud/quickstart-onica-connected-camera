@@ -1,12 +1,14 @@
 'use strict';
 
 const AWS = require("aws-sdk")
+const request = require("request-promise-native")
 
 class ProvisioningService {
 
   constructor() {
     this._iot = new AWS.Iot()
     this._iam = new AWS.IAM()
+    this._kinesisVideo = new AWS.KinesisVideo()
   }
 
   async provisionThing(id) {
@@ -38,17 +40,43 @@ class ProvisioningService {
     const target = keys.certificateArn
     const attachPolicy = await this._iot.attachPolicy({ policyName, target }).promise()
 
+    //iot data endpoint
+    const dataEndpoint = await this._iot.describeEndpoint({endpointType: "iot:Data"}).promise()
+    const IoTEndpointUrl = dataEndpoint.endpointAddress
+
+    //iot ca
+    const IoTCACert = await request({method: "GET", url: "https://www.amazontrust.com/repository/AmazonRootCA1.pem"})
+
     //iot credential endpoint for role alias
-    const endpoint = await this._iot.describeEndpoint({endpointType: "iot:CredentialProvider"}).promise()
+    const credentialEndpoint = await this._iot.describeEndpoint({endpointType: "iot:CredentialProvider"}).promise()
     const roleAlias = process.env.CameraStreamingRoleAliasName
-    const IoTCredentialUrl = `https://${endpoint.endpointAddress}/role-aliases/${roleAlias}/credentials`
+    const IoTCredentialUrl = `https://${credentialEndpoint.endpointAddress}/role-aliases/${roleAlias}/credentials`
+
+    //create stream
+    const StreamName = thingName
+    let KMSKeyId
+    try {
+      const existingStream = await this._kinesisVideo.describeStream({StreamName}).promise()
+      KMSKeyId = existingStream.StreamInfo.KmsKeyId
+      console.log("Kinesis video stream already exists.")
+    } catch (err) {
+      //Ignore ResourceNotFoundException
+      console.log("Creating kinesis video stream.")
+      const kvs = await this._kinesisVideo.createStream({StreamName, MediaType: "video/h264", DataRetentionInHours: 24}).promise()
+      const existingStream = await this._kinesisVideo.describeStream({StreamName}).promise()
+      KMSKeyId = existingStream.StreamInfo.KmsKeyId
+    }
 
     return {
-      StreamName: thingName, //TODO provision stream
-      Region: "REGION-TBD", //TBD
+      ThingName: thingName,
+      StreamName,
+      Region: process.env.AWSRegion,
       IoTCertificate: keys.certificatePem,
       IoTPrivateKey: keys.keyPair.PrivateKey,
-      IoTCredentialUrl
+      IoTCACert,
+      IoTEndpointUrl,
+      IoTCredentialUrl,
+      KMSKeyId
     }
   }
 

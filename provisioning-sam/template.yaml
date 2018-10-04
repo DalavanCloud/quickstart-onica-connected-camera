@@ -5,6 +5,12 @@ Description: AWS Connected Camera Provisioning SAM Template
 Globals:
   Function:
     Timeout: 6
+    Environment:
+      Variables:
+        ProvisioningKeyTableName:
+          Ref: ProvisioningKeyTable
+        AWSRegion:
+          Fn::Sub: ${AWS::Region}
 
 Resources:
   #Lambdas
@@ -16,10 +22,6 @@ Resources:
       Runtime: nodejs8.10
       Role:
         Fn::GetAtt: ProvisioningLambdaRole.Arn
-      Environment:
-        Variables:
-          ProvisioningKeyTableName:
-            Ref: ProvisioningKeyTable
       Events:
         StackAvailability:
           Type: Api
@@ -36,8 +38,6 @@ Resources:
         Fn::GetAtt: ProvisioningLambdaRole.Arn
       Environment:
         Variables:
-          ProvisioningKeyTableName:
-            Ref: ProvisioningKeyTable
           IoTCameraPolicyName:
             Ref: IoTCameraPolicy
           CameraStreamingRoleAliasName:
@@ -126,6 +126,16 @@ Resources:
                   - iot:DescribeRoleAlias
                   - iot:CreateRoleAlias
                   - iot:UpdateRoleAlias
+                Resource: "*"
+        - PolicyName: KinesisVideoPolicy
+          # Permission to provision video stream
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kinesisvideo:DescribeStream
+                  - kinesisvideo:CreateStream
                 Resource: "*"
         # IAM permission for roleAlias lambda to associate alias to role
         - PolicyName: IAMPolicy
