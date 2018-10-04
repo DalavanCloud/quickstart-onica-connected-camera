@@ -1,4 +1,5 @@
 const provisioningKeyRepository = require('./repository/provisioningKeyRepository')
+const provisioningService = require('./service/provisioningService')
 
 /**
  *
@@ -52,4 +53,27 @@ exports.getStackAvailability = async (event, context) => {
   }
 
   return response
+}
+
+/**
+ * Provision thing. Post body thing: {id}
+ */
+exports.provisionThing = async (event, context) => {
+
+  try {
+    const body = JSON.parse(event.body)
+    const id = body.id
+
+    let thing = await provisioningService.provisionThing(id)
+    return {
+      'statusCode': 200,
+      'body': JSON.stringify(thing)
+    }
+  } catch (err) {
+    console.log(err)
+    return {
+      'statusCode': 500,
+      'body': JSON.stringify({message: err.message, stack: err.stack})
+    }
+  }
 }
