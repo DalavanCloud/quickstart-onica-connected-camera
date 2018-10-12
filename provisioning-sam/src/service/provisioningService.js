@@ -2,6 +2,8 @@
 
 const AWS = require("aws-sdk")
 const request = require("request-promise-native")
+const provisioningKeyRepository = require('../repository/provisioningKeyRepository')
+
 
 class ProvisioningService {
 
@@ -9,6 +11,18 @@ class ProvisioningService {
     this._iot = new AWS.Iot()
     this._iam = new AWS.IAM()
     this._kinesisVideo = new AWS.KinesisVideo()
+  }
+
+  async authorize(provisioningKey) {
+    if (!provisioningKey) {
+      console.log("Missing provisioning key.")
+      return false
+    }
+    const authorized = await provisioningKeyRepository.existsProvisioningKey(provisioningKey)
+    if (!authorized) {
+      console.log("Provisioning key is invalid.")
+    }
+    return authorized
   }
 
   async provisionThing(id) {

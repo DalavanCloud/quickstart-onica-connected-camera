@@ -1,4 +1,3 @@
-const provisioningKeyRepository = require('./repository/provisioningKeyRepository')
 const provisioningService = require('./service/provisioningService')
 
 /**
@@ -36,23 +35,28 @@ const provisioningService = require('./service/provisioningService')
  *
  */
 exports.getStackAvailability = async (event, context) => {
-  let response
   try {
-    //example to check ddb for existence of a key..
-    //let available = await provisioningKeyRepository.existsProvisioningKey('foo')
-    let available = true
-    response = {
-      'statusCode': 200,
-      'body': JSON.stringify({
-        available
-      })
+    const headers = event.headers || {}
+    const authorized = await provisioningService.authorize(headers.Authorization)
+    if (!authorized) {
+      return {
+        statusCode: 403,
+        body: JSON.stringify({message: "Invalid Provisioning Key."})
+      }
+    } else {
+      //stack available
+      return {
+        statusCode: 200,
+        body: JSON.stringify({})
+      }
     }
   } catch (err) {
     console.log(err)
-    return err
+    return {
+      statusCode: 500,
+      body: JSON.stringify({message: err.message, stack: err.stack})
+    }
   }
-
-  return response
 }
 
 /**
@@ -61,19 +65,29 @@ exports.getStackAvailability = async (event, context) => {
 exports.provisionThing = async (event, context) => {
 
   try {
-    const body = JSON.parse(event.body)
-    const id = body.id
+    const headers = event.headers || {}
+    const authorized = await provisioningService.authorize(headers.Authorization)
+    if (!authorized) {
+      return {
+        statusCode: 403,
+        body: JSON.stringify({message: "Invalid Provisioning Key."})
+      }
+    } else {
+      //provision thing
+      const body = JSON.parse(event.body)
+      const id = body.id
 
-    let thing = await provisioningService.provisionThing(id)
-    return {
-      'statusCode': 200,
-      'body': JSON.stringify(thing)
+      let thing = await provisioningService.provisionThing(id)
+      return {
+        statusCode: 200,
+        body: JSON.stringify(thing)
+      }
     }
   } catch (err) {
     console.log(err)
     return {
-      'statusCode': 500,
-      'body': JSON.stringify({message: err.message, stack: err.stack})
+      statusCode: 500,
+      body: JSON.stringify({message: err.message, stack: err.stack})
     }
   }
 }

@@ -2,6 +2,15 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: AWS Connected Camera Provisioning SAM Template
 
+Parameters:
+  CreateProvisioningKey:
+    Description: "Whether to automatically create a provisioning key when launching the stack"
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+
 Globals:
   Function:
     Timeout: 6
@@ -66,9 +75,26 @@ Resources:
       RoleAlias: camera-streaming-role-alias
       RoleArn:
         Fn::GetAtt: CameraStreamingRole.Arn
+  #CF Provisioning Key custom resource
+  ProvisioningKeyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: cfcustomresources/provisioningKey.handler
+      Runtime: nodejs8.10
+      Role:
+        Fn::GetAtt: ProvisioningLambdaRole.Arn
+  ProvisioningKeyCustomResource:
+    Type: Custom::ProvisioningKey
+    Properties:
+      ServiceToken:
+        Fn::GetAtt: ProvisioningKeyFunction.Arn
+      CreateProvisioningKey:
+        Ref: CreateProvisioningKey
+      ProvisioningKeyTableName:
+        Ref: ProvisioningKeyTable
 
   #DynamoDB
-  #TODO provisioning key mechanism?
   ProvisioningKeyTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
@@ -102,14 +128,15 @@ Resources:
                   - logs:PutLogEvents
                 Resource: "*"
         - PolicyName: DynamoDBPolicy
-          # TODO/TBD permissions regarding provisioning key mechanism.
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - dynamodb:*
-                Resource: "*"
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                Resource:
+                  Fn::GetAtt: ProvisioningKeyTable.Arn
         - PolicyName: IoTPolicy
           # IoT permissions for provisioning and roleAlias lambdas
           PolicyDocument:
@@ -197,4 +224,8 @@ Resources:
 Outputs:
   ProvisioningApi:
     Description: "Endpoint base path"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+  ProvisioningKey:
+    Description: "Provisioning key"
+    Value:
+      Fn::GetAtt: ProvisioningKeyCustomResource.provisioningKey

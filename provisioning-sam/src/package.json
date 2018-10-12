@@ -6,15 +6,16 @@
   "author": "Onica",
   "license": "MIT",
   "dependencies": {
-    "request": "^2.88.0",
-    "request-promise-native": "^1.0.5"
+    "request": "2.88.0",
+    "request-promise-native": "1.0.5",
+    "uuid": "3.3.2"
   },
   "scripts": {
     "test": "mocha tests/unit/"
   },
   "devDependencies": {
-    "aws-sdk": "^2.325.0",
-    "chai": "^4.1.2",
-    "mocha": "^5.1.1"
+    "aws-sdk": "2.325.0",
+    "chai": "4.1.2",
+    "mocha": "5.1.1"
   }
 }
