@@ -2,50 +2,108 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: AWS Connected Camera Provisioning SAM Template
 
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Parameters:
+  CreateProvisioningKey:
+    Description: "Whether to automatically create a provisioning key when launching the stack"
+    Type: String
+    AllowedValues:
+      - "true"
+      - "false"
+    Default: "true"
+
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 6
+    Environment:
+      Variables:
+        ProvisioningKeyTableName:
+          Ref: ProvisioningKeyTable
+        AWSRegion:
+          Fn::Sub: ${AWS::Region}
 
 Resources:
   #Lambdas
   StackAvailabilityFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
       Handler: handler.getStackAvailability
       Runtime: nodejs8.10
       Role:
-        Fn::GetAtt:
-          - ProvisioningLambdaRole
-          - Arn
-      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
-        Variables:
-          ProvisioningKeyTableName:
-            Ref: ProvisioningKeyTable
+        Fn::GetAtt: ProvisioningLambdaRole.Arn
       Events:
         StackAvailability:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: Api
           Properties:
             Path: /stack_availability
             Method: get
+  ProvisionThingLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handler.provisionThing
+      Runtime: nodejs8.10
+      Role:
+        Fn::GetAtt: ProvisioningLambdaRole.Arn
+      Environment:
+        Variables:
+          IoTCameraPolicyName:
+            Ref: IoTCameraPolicy
+          CameraStreamingRoleAliasName:
+            Fn::GetAtt: RoleAliasCustomResource.roleAlias
+      Events:
+        ProvisionThing:
+          Type: Api
+          Properties:
+            Path: /provision
+            Method: post
+
+  #CF Role Alias custom resource
+  RoleAliasFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: cfcustomresources/roleAlias.handler
+      Runtime: nodejs8.10
+      Role:
+        Fn::GetAtt: ProvisioningLambdaRole.Arn
+  RoleAliasCustomResource:
+    Type: Custom::RoleAlias
+    Properties:
+      ServiceToken:
+        Fn::GetAtt: RoleAliasFunction.Arn
+      RoleAlias: camera-streaming-role-alias
+      RoleArn:
+        Fn::GetAtt: CameraStreamingRole.Arn
+  #CF Provisioning Key custom resource
+  ProvisioningKeyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: cfcustomresources/provisioningKey.handler
+      Runtime: nodejs8.10
+      Role:
+        Fn::GetAtt: ProvisioningLambdaRole.Arn
+  ProvisioningKeyCustomResource:
+    Type: Custom::ProvisioningKey
+    Properties:
+      ServiceToken:
+        Fn::GetAtt: ProvisioningKeyFunction.Arn
+      CreateProvisioningKey:
+        Ref: CreateProvisioningKey
+      ProvisioningKeyTableName:
+        Ref: ProvisioningKeyTable
 
   #DynamoDB
   ProvisioningKeyTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
-      TableName: ProvisioningKeyTable
       PrimaryKey:
         Name: key
         Type: String
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
-      # Tags:
-      #   Department: Engineering
-      #   AppType: Serverless
-      # SSESpecification:
-      #   SSEEnabled: true
 
   # Lambda Role
   ProvisioningLambdaRole:
@@ -70,21 +128,104 @@ Resources:
                   - logs:PutLogEvents
                 Resource: "*"
         - PolicyName: DynamoDBPolicy
-          #FIXME permissions. may want to use apigw key or another mechanism instead anyway.
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - dynamodb:*
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                Resource:
+                  Fn::GetAtt: ProvisioningKeyTable.Arn
+        - PolicyName: IoTPolicy
+          # IoT permissions for provisioning and roleAlias lambdas
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iot:DescribeThing
+                  - iot:CreateThing
+                  - iot:CreateKeysAndCertificate
+                  - iot:AttachThingPrincipal
+                  - iot:AttachPolicy
+                  - iot:DescribeEndpoint
+                  - iot:DescribeRoleAlias
+                  - iot:CreateRoleAlias
+                  - iot:UpdateRoleAlias
                 Resource: "*"
+        - PolicyName: KinesisVideoPolicy
+          # Permission to provision video stream
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kinesisvideo:DescribeStream
+                  - kinesisvideo:CreateStream
+                Resource: "*"
+        # IAM permission for roleAlias lambda to associate alias to role
+        - PolicyName: IAMPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource:
+                  Fn::GetAtt: CameraStreamingRole.Arn
+
+  # IoT camera policy including ability to request CameraStreamingRole credentials
+  IoTCameraPolicy:
+    Type: AWS::IoT::Policy
+    # Retain for connected cameras to function after deleting this stack
+    DeletionPolicy: Retain
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - iot:Connect
+          - iot:Publish
+          - iot:Subscribe
+          - iot:Receive
+          Resource: "*"
+        - Effect: Allow
+          Action:
+          - iot:assumeRoleWithCertificate
+          Resource:
+            Fn::GetAtt: RoleAliasCustomResource.roleAliasArn
+
+  # Role to allow camera to stream to KVS. Provided via iot credentials provider endpoint.
+  CameraStreamingRole:
+    Type: AWS::IAM::Role
+    # Retain for connected cameras to function after deleting this stack
+    DeletionPolicy: Retain
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: credentials.iot.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+        - PolicyName: KVSPolicy
+          # Permissions for the camera to stream to KVS.
+          # TODO restrict to expected operations.
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              Effect: Allow
+              Action:
+              - kinesisvideo:*
+              Resource: "*"
 Outputs:
   ProvisioningApi:
     Description: "Endpoint base path"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
-  # HelloWorldFunction:
-  #   Description: "Hello World Lambda Function ARN"
-  #   Value: !GetAtt HelloWorldFunction.Arn
-  # HelloWorldFunctionIamRole:
-  #   Description: "Implicit IAM Role created for Hello World function"
-  #   Value: !GetAtt HelloWorldFunctionRole.Arn
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+  ProvisioningKey:
+    Description: "Provisioning key"
+    Value:
+      Fn::GetAtt: ProvisioningKeyCustomResource.provisioningKey
