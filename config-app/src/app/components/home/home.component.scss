@@ -4,14 +4,38 @@
   align-items: center;
   justify-content: center;
 
-  background: url(../../../assets/background.jpg) no-repeat center fixed;
-  -webkit-background-size: cover; /* pour anciens Chrome et Safari */
-  background-size: cover; /* version standardisée */
+  mat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    width: 600px;
+  }
 
-  .title {
-    color: white;
-    margin:0;
-    padding:50px 20px;
+  .stack-availability {
+    mat-form-field {
+      width: 100%;
+    }
+
+    button {
+      float: right;
+    }
+    mat-spinner {
+      float: right;
+    }
+  }
+
+  .camera-discovery {
+    mat-spinner {
+      //FIXME
+      display: inline-block;
+    }
+
+    mat-form-field {
+      width: 100%;
+    }
+
   }
 
 }
