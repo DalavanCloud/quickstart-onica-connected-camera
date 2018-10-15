@@ -37,6 +37,12 @@
     "e2e": "npm run postinstall:web && ng e2e"
   },
   "dependencies": {
+    "@angular/animations": "^6.1.9",
+    "@angular/cdk": "^6.4.7",
+    "@angular/material": "^6.4.7",
+    "node-onvif": "^0.1.7",
+    "request": "^2.88.0",
+    "request-promise-native": "^1.0.5"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "0.6.3",

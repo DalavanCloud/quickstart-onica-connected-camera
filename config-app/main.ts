@@ -1,10 +1,14 @@
-import { app, BrowserWindow, screen } from 'electron';
+import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 
 let win, serve;
 const args = process.argv.slice(1);
 serve = args.some(val => val === '--serve');
+
+import { DiscoveryService } from './src/app/mainprocess/discoveryService';
+import { ProvisioningService } from './src/app/mainprocess/provisioningService';
+let discoveryService, provisioningService;
 
 function createWindow() {
 
@@ -13,10 +17,8 @@ function createWindow() {
 
   // Create the browser window.
   win = new BrowserWindow({
-    x: 0,
-    y: 0,
-    width: size.width,
-    height: size.height
+    width: Math.ceil(size.width/2),
+    height: Math.ceil(size.height*3/4)
   });
 
   if (serve) {
@@ -46,6 +48,11 @@ function createWindow() {
 
 try {
 
+  discoveryService = new DiscoveryService();
+  discoveryService.registerMainProcessIPC();
+  provisioningService = new ProvisioningService();
+  provisioningService.registerMainProcessIPC();
+
   // This method will be called when Electron has finished
   // initialization and is ready to create browser windows.
   // Some APIs can only be used after this event occurs.
@@ -69,6 +76,8 @@ try {
   });
 
 } catch (e) {
+  console.log("Error starting electron.")
+  console.log(e)
   // Catch Error
   // throw e;
 }
