@@ -86,7 +86,7 @@ Resources:
           Type: Api
           Properties:
             Path: /pair
-            Method: post
+            Method: put
 
   #CF Role Alias custom resource
   RoleAliasFunction:

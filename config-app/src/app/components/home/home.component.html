@@ -47,7 +47,7 @@
       <div>
         <mat-list>
           <mat-list-item *ngFor="let camera of cameras">
-            <mat-checkbox [(ngModel)]="camera.checked" [disabled]="state.provisioningLoading" (ngModelChange)="setAnyCameraChecked()">{{camera.urn}} ({{camera.name}})</mat-checkbox><span class="mat-body-2">{{camera.status}}</span>
+            <mat-checkbox [(ngModel)]="camera.checked" [disabled]="state.provisioningLoading" (ngModelChange)="setAnyCameraChecked()">{{camera.ip}} {{camera.urn}} {{camera.name}}</mat-checkbox><span class="mat-body-2">{{camera.status}}</span>
             <mat-icon *ngIf="camera.workflowError" color="accent" [matTooltip]="camera.workflowErrorMessage">error_outline</mat-icon>
           </mat-list-item>
         </mat-list>

@@ -53,11 +53,26 @@ export class ProvisioningService {
     console.log("main process received provisiong camera request.")
     console.log(args)
 
+    this.provisionCloudStep(event, args)
+      .then(thing => this.provisionCameraStep(event, args, thing))
+      .then(() => {
+        console.log("Provisioning success.")
+        event.sender.send('provision-camera-response', {camera: args.camera})
+      })
+      .catch(err => {
+        console.log("Provisioning error.")
+        event.sender.send('provision-camera-response', {camera: args.camera, error: true, errorMessage: `Provisioning failure in ${err.step} step: ${err.message}`})
+      })
+  }
+
+
+  provisionCloudStep(event, args) {
+    console.log("cloud step")
     const url = (args.stackEndpoint || '').trim() + "/provision"
     const Authorization = (args.provisioningKey || '').trim()
     const id = args.camera.urn
     console.log(url)
-    request({
+    return request({
       url,
       method: 'post',
       headers: {
@@ -65,16 +80,62 @@ export class ProvisioningService {
       },
       body: JSON.stringify({id})
     }).then(result => {
-      console.log("Provisioning success!")
+      console.log("Provisioning success in cloud step!")
       console.log(result)
-      event.sender.send('provision-camera-response', {camera: args.camera})
+      const thing = JSON.parse(result)
+      return thing
     }).catch(err => {
-      console.log("Provisioning failure!")
+      console.log("Provisioning failure in cloud step!")
       console.log(err)
       console.log(err.name)
       console.log(err.statusCode)
       console.log(err.message)
-      event.sender.send('provision-camera-response', {camera: args.camera, error: true, errorMessage: "Stack provisioning api failure: " + err.message})
+      err.step = "cloud"
+      throw err
+    })
+  }
+
+  provisionCameraStep(event, args, thing) {
+    console.log("camera step")
+
+    //camera pairing url
+    const url = `${args.camera.cameraApiScheme}://${args.camera.ip}/provisioning/pair`
+    console.log(url)
+
+    //camera Basic auth
+    let Authorization
+    if (args.camera.cameraApiUsername.length > 0 && args.camera.cameraApiPassword.length > 0) {
+      console.log("Including camera authentication.")
+      Authorization = "Basic " + Buffer.from(`${args.camera.cameraApiUsername}:${args.camera.cameraApiPassword}`).toString('base64')
+      console.log(Authorization)
+    } else {
+      console.log("Skipping camera authentication.")
+    }
+
+    //provisioning docs mistakenly specified 'Authentication' header, so provide both
+    const Authentication = Authorization
+
+    //provide provisioned thing data via camera pairing api
+    return request({
+      url,
+      method: 'put',
+      headers: {
+        Authorization,
+        Authentication
+      },
+      body: JSON.stringify(thing)
+    }).then(result => {
+      console.log("Provisioning success in camera step!")
+      console.log(result)
+      return result
+    }).catch(err => {
+      console.log("Provisioning failure in camera step!")
+      console.log(err)
+      console.log(err.name)
+      console.log(err.statusCode)
+      console.log(err.message)
+      err.step = "camera"
+      throw err
     })
   }
 }
