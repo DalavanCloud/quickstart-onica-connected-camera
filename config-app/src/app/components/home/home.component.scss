@@ -32,7 +32,11 @@
       display: inline-block;
     }
 
-    mat-form-field {
+    .camera-credentials-form {
+      width: 50%;
+    }
+
+    .new-camera-form {
       width: 100%;
     }
 

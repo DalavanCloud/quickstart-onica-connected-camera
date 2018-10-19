@@ -108,6 +108,10 @@ export class HomeComponent implements OnInit {
       stackAvailabilitySuccess: false,
       stackEndpointError: false,
       provisioningKeyError: false,
+      cameraApiSchemes: ["http", "https"],
+      cameraApiScheme: "http",
+      cameraApiUsername: "",
+      cameraApiPassword: "",
       discoveryLoading: false,
       anyCameraChecked: false,
       provisioningLoading: false,
@@ -207,6 +211,15 @@ export class HomeComponent implements OnInit {
 
     const camerasToProvision = this.cameras.filter(camera => camera.checked)
     if (camerasToProvision.length > 0) {
+
+      //add global camera provisioning info
+      camerasToProvision.forEach(camera => {
+        camera.cameraApiScheme = this.state.cameraApiScheme,
+        camera.cameraApiUsername = this.state.cameraApiUsername,
+        camera.cameraApiPassword = this.state.cameraApiPassword
+      })
+
+      //provision cameras
       this.state.provisioningLoading = true
       this.electronService.provisionCameras(this.state.stackEndpoint, this.state.provisioningKey, camerasToProvision)
         .then(() => {

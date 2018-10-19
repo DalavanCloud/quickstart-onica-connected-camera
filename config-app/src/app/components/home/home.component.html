@@ -23,6 +23,22 @@
     <div class="camera-discovery" *ngIf="state.stackAvailabilitySuccess">
       <label class="mat-body-2">Status: </label><span class="mat-body-1">{{state.statusMessage}}</span>
       <div>
+        <span class="mat-body-2">Camera API scheme</span>
+        <mat-radio-group [(ngModel)]="state.cameraApiScheme">
+          <mat-radio-button *ngFor="let scheme of state.cameraApiSchemes" [value]="scheme">
+            {{scheme}}
+          </mat-radio-button>
+        </mat-radio-group>
+      </div>
+      <div>
+        <mat-form-field class="camera-credentials-form">
+          <input matInput [(ngModel)]="state.cameraApiUsername" placeholder="Camera API username"/>
+        </mat-form-field>
+        <mat-form-field class="camera-credentials-form">
+          <input matInput [(ngModel)]="state.cameraApiPassword" placeholder="Camera API password" type="password"/>
+        </mat-form-field>
+      </div>
+      <div>
         <button mat-stroked-button [disabled]="state.discoveryLoading || state.provisioningLoading" color="primary" (click)="onDiscover()">Discover Cameras</button>
         <mat-spinner *ngIf="state.discoveryLoading" diameter="32"></mat-spinner>
         <button mat-stroked-button [disabled]="state.provisioningLoading || !state.anyCameraChecked" color="accent" (click)="onProvisionCameras()">Provision Selected Cameras</button>
@@ -40,15 +56,15 @@
         <a (click)="onClickAdd()"><span class="mat-body-2">Manual Camera Entry</span><mat-icon color="primary">add_circle_outline</mat-icon></a>
       </div>
       <div *ngIf="state.addingNewCamera">
-        <mat-form-field>
+        <mat-form-field class="new-camera-form">
           <input matInput [(ngModel)]="newCamera.ip" [errorStateMatcher]="newCameraIpErrorStateMatcher" placeholder="IP Address"/>
           <mat-error>Please enter a valid IP address</mat-error>
         </mat-form-field>
-        <mat-form-field>
+        <mat-form-field class="new-camera-form">
           <input matInput [(ngModel)]="newCamera.urn" [errorStateMatcher]="newCameraUrnErrorStateMatcher" placeholder="Unique ID"/>
           <mat-error>Please enter a unique ID</mat-error>
         </mat-form-field>
-        <mat-form-field>
+        <mat-form-field class="new-camera-form">
           <input matInput [(ngModel)]="newCamera.name" [errorStateMatcher]="newCameraNameErrorStateMatcher" placeholder="Name"/>
           <mat-error>Please enter a camera name</mat-error>
         </mat-form-field>

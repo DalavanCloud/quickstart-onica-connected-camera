@@ -21,7 +21,7 @@ import { AppComponent } from './app.component';
 import { HomeComponent } from './components/home/home.component';
 
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {MatButtonModule, MatCheckboxModule, MatListModule, MatInputModule, MatProgressSpinnerModule, MatCardModule, MatIconModule, MatTooltipModule} from '@angular/material';
+import {MatButtonModule, MatCheckboxModule, MatListModule, MatInputModule, MatProgressSpinnerModule, MatCardModule, MatIconModule, MatTooltipModule, MatRadioModule} from '@angular/material';
 
 // AoT requires an exported function for factories
 export function HttpLoaderFactory(http: HttpClient) {
@@ -47,7 +47,7 @@ export function HttpLoaderFactory(http: HttpClient) {
       }
     }),
     BrowserAnimationsModule,
-    MatButtonModule, MatCheckboxModule, MatListModule, MatInputModule, MatProgressSpinnerModule, MatCardModule, MatIconModule, MatTooltipModule
+    MatButtonModule, MatCheckboxModule, MatListModule, MatInputModule, MatProgressSpinnerModule, MatCardModule, MatIconModule, MatTooltipModule, MatRadioModule
   ],
   providers: [ElectronService],
   bootstrap: [AppComponent]
