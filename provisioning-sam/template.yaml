@@ -58,6 +58,36 @@ Resources:
             Path: /provision
             Method: post
 
+  #Camera api stubs
+  ExampleCameraStatusLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: cameraHandler.status
+      Runtime: nodejs8.10
+      Role:
+        Fn::GetAtt: ProvisioningLambdaRole.Arn
+      Events:
+        CameraPairing:
+          Type: Api
+          Properties:
+            Path: /status
+            Method: get
+  ExampleCameraPairingLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: cameraHandler.pair
+      Runtime: nodejs8.10
+      Role:
+        Fn::GetAtt: ProvisioningLambdaRole.Arn
+      Events:
+        CameraPairing:
+          Type: Api
+          Properties:
+            Path: /pair
+            Method: put
+
   #CF Role Alias custom resource
   RoleAliasFunction:
     Type: AWS::Serverless::Function
