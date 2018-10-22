@@ -1,11 +1,11 @@
 {
-  "name": "angular-electron",
-  "version": "4.2.2",
-  "description": "Angular 6 with Electron (Typescript + SASS + Hot Reload)",
-  "homepage": "https://github.com/maximegris/angular-electron",
+  "name": "config-app",
+  "version": "1.0.0",
+  "description": "AWS Connected Camera Config App",
+  "homepage": "https://github.com/aws-quickstart/quickstart-onica-connected-camera",
   "author": {
-    "name": "Maxime GRIS",
-    "email": "maxime.gris@gmail.com"
+    "name": "Ryan Beck",
+    "email": "rbeck@onica.com"
   },
   "keywords": [
     "angular",
@@ -37,12 +37,12 @@
     "e2e": "npm run postinstall:web && ng e2e"
   },
   "dependencies": {
-    "@angular/animations": "^6.1.9",
-    "@angular/cdk": "^6.4.7",
-    "@angular/material": "^6.4.7",
-    "node-onvif": "^0.1.7",
-    "request": "^2.88.0",
-    "request-promise-native": "^1.0.5"
+    "@angular/animations": "6.1.9",
+    "@angular/cdk": "6.4.7",
+    "@angular/material": "6.4.7",
+    "node-onvif": "0.1.7",
+    "request": "2.88.0",
+    "request-promise-native": "1.0.5"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "0.6.3",
