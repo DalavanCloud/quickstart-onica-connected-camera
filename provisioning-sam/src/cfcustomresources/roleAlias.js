@@ -17,6 +17,7 @@ exports.handler = function(event, context) {
     //verify params
     const roleAlias = event.ResourceProperties.RoleAlias
     const roleArn = event.ResourceProperties.RoleArn
+    const credentialDurationSeconds = 3600 //max
     if (!roleAlias || !roleArn) {
       throw new Error("RoleAlias and RoleArn parameters are required.")
     }
@@ -35,7 +36,7 @@ exports.handler = function(event, context) {
       } else {
         //Alias changed to a different role arn.
         console.log(`updating roleAlias roleArn from ${existingRoleAlias.roleArn} to ${roleArn}.`)
-        iot.updateRoleAlias({roleAlias, roleArn}).promise()
+        iot.updateRoleAlias({roleAlias, roleArn, credentialDurationSeconds}).promise()
           .then(responseData => {
             console.log("updated roleAlias.")
             console.log(responseData)
@@ -49,7 +50,7 @@ exports.handler = function(event, context) {
       console.log(err)
 
       console.log(`creating new roleAlias ${roleAlias}.`)
-      iot.createRoleAlias({roleAlias, roleArn}).promise()
+      iot.createRoleAlias({roleAlias, roleArn, credentialDurationSeconds}).promise()
         .then(responseData => {
           console.log("created new roleAlias.")
           console.log(responseData)
