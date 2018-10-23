@@ -252,7 +252,7 @@ Resources:
               - kinesisvideo:*
               Resource: "*"
 Outputs:
-  ProvisioningApi:
+  StackEndpoint:
     Description: "Endpoint base path"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
   ProvisioningKey:
