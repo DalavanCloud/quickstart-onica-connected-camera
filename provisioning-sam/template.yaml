@@ -218,8 +218,6 @@ Resources:
           Action:
           - iot:Connect
           - iot:Publish
-          - iot:Subscribe
-          - iot:Receive
           Resource: "*"
         - Effect: Allow
           Action:
@@ -243,16 +241,23 @@ Resources:
       Policies:
         - PolicyName: KVSPolicy
           # Permissions for the camera to stream to KVS.
-          # TODO restrict to expected operations.
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               Effect: Allow
               Action:
-              - kinesisvideo:*
+              - kinesisvideo:DescribeStream
+              - kinesisvideo:PutMedia
+              - kinesisvideo:ListFragments
+              - kinesisvideo:ListStreams
+              - kinesisvideo:CreateStream
+              - kinesisvideo:UpdateStream
+              - kinesisvideo:DeleteStream
+              - kinesisvideo:UpdateDataRetention
+              - kinesisvideo:GetDataEndpoint
               Resource: "*"
 Outputs:
-  ProvisioningApi:
+  StackEndpoint:
     Description: "Endpoint base path"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
   ProvisioningKey:
