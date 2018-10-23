@@ -4,7 +4,7 @@
       {{ 'PAGES.HOME.TITLE' | translate }}
     </h1>
     <div>
-      <label class="mat-body-2">Stack Availability: </label><span class="mat-body-1">{{state.success}}</span>
+      <label class="mat-body-2">Stack Availability: </label><span class="mat-body-1">{{state.stackAvailabilitySuccess}}</span>
     </div>
     <div class="stack-availability" *ngIf="!state.stackAvailabilitySuccess">
       <mat-form-field>

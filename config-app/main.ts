@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen, ipcMain } from 'electron';
+import { app, BrowserWindow, screen, ipcMain, Menu } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
 
@@ -6,8 +6,8 @@ let win, serve;
 const args = process.argv.slice(1);
 serve = args.some(val => val === '--serve');
 
-import { DiscoveryService } from './src/app/mainprocess/discoveryService';
-import { ProvisioningService } from './src/app/mainprocess/provisioningService';
+import { DiscoveryService } from './discoveryService';
+import { ProvisioningService } from './provisioningService';
 let discoveryService, provisioningService;
 
 function createWindow() {
@@ -34,7 +34,7 @@ function createWindow() {
     }));
   }
 
-  win.webContents.openDevTools();
+  //win.webContents.openDevTools();
 
   // Emitted when the window is closed.
   win.on('closed', () => {
@@ -44,6 +44,45 @@ function createWindow() {
     win = null;
   });
 
+}
+
+//copy/paste support on mac requires menu
+function createMenu() {
+
+  const template = []
+  if (process.platform == 'darwin') {
+    template.push({
+      label: app.getName(),
+      submenu: [
+        // { role: 'about' },
+        // { type: 'separator' },
+        // { role: 'services', submenu: [] },
+        // { type: 'separator' },
+        // { role: 'hide' },
+        // { role: 'hideothers' },
+        // { role: 'unhide' },
+        // { type: 'separator' },
+        { role: 'quit' }
+      ]
+    })
+  }
+  template.push({
+    label: 'Edit',
+    submenu: [
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      { role: 'pasteandmatchstyle' },
+      { role: 'delete' },
+      { role: 'selectall' }
+    ]
+  })
+
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
 }
 
 try {
@@ -56,7 +95,10 @@ try {
   // This method will be called when Electron has finished
   // initialization and is ready to create browser windows.
   // Some APIs can only be used after this event occurs.
-  app.on('ready', createWindow);
+  app.on('ready', () => {
+    createWindow();
+    createMenu();
+  });
 
   // Quit when all windows are closed.
   app.on('window-all-closed', () => {
