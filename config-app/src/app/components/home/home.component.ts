@@ -263,10 +263,13 @@ export class HomeComponent implements OnInit {
     if (this.newCameraIpErrorStateMatcher.fieldHasError() || this.newCameraUrnErrorStateMatcher.fieldHasError() || this.newCameraNameErrorStateMatcher.fieldHasError()) {
       this.state.showAddingNewCameraError = true
     } else {
-      //TODO: getStatus..
       this.newCamera.status = 'UNPAIRED'
       this.newCamera.checked = true
-      this.cameras.push(this.newCamera)
+
+      //bug in table datasource requires replacement to update
+      //this.cameras.push(this.newCamera)
+      this.cameras = [...this.cameras, this.newCamera]
+
       this.setAnyCameraChecked()
       this.onCancelNew()
     }
