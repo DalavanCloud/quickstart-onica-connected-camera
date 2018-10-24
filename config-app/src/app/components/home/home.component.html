@@ -90,7 +90,7 @@
 
     <div *ngIf="cameras.length > 0 " class="camera-authentication-container">
       <div class="auth-type-container">
-        <span class="mat-subheading-1">Auth Type:</span>
+        <span class="mat-subheading-1">Camera provisioning APIs:</span>
         <mat-radio-group [(ngModel)]="state.cameraApiScheme" [disabled]="!state.anyCameraChecked">
           <mat-radio-button *ngFor="let scheme of state.cameraApiSchemes" [value]="scheme">
             {{scheme}}

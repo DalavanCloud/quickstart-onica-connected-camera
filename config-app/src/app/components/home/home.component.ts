@@ -116,7 +116,7 @@ export class HomeComponent implements OnInit {
       discoveryLoading: false,
       anyCameraChecked: false,
       provisioningLoading: false,
-      statusMessage: "Waiting to discover cameras",
+      statusMessage: "Enter stack endpoint and provisioning key",
       addingNewCamera: false,
       showAddingNewCameraError: false
     }
@@ -153,6 +153,7 @@ export class HomeComponent implements OnInit {
 
         //transition to discovery
         this.state.stackAvailabilitySuccess = true
+        this.state.statusMessage = "Waiting to discover cameras"
       })
       .catch(err => {
         console.log(err)
