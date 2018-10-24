@@ -1,76 +1,112 @@
-<div class="container">
-  <mat-card>
-    <h1 class="mat-title">
-      {{ 'PAGES.HOME.TITLE' | translate }}
-    </h1>
-    <div>
-      <label class="mat-body-2">Stack Availability: </label><span class="mat-body-1">{{state.stackAvailabilitySuccess}}</span>
+<mat-toolbar>
+  <span>{{ 'PAGES.HOME.TITLE' | translate }}</span>
+  <span class="mat-body-1"><label class="mat-body-2">Status: </label>{{state.statusMessage}}</span>
+</mat-toolbar>
+
+<mat-card>
+
+  <div class="stack-availability" *ngIf="!state.stackAvailabilitySuccess">
+    <mat-form-field>
+      <input matInput [(ngModel)]="state.stackEndpoint" [errorStateMatcher]="stackEndpointErrorStateMatcher" placeholder="Stack Endpoint"/>
+      <mat-error>Stack Endpoint Not Available</mat-error>
+    </mat-form-field>
+    <mat-form-field>
+      <input matInput [(ngModel)]="state.provisioningKey" [errorStateMatcher]="provisioningKeyErrorStateMatcher" placeholder="Provisioning Key"/>
+      <mat-error>Invalid Provisioning Key</mat-error>
+    </mat-form-field>
+    <button mat-raised-button color="accent" (click)="onConfigureEndpoint()">Save</button>
+    <div class="spinner-container">
+      <mat-spinner *ngIf="state.stackAvailabilityLoading" diameter="48"></mat-spinner>
     </div>
-    <div class="stack-availability" *ngIf="!state.stackAvailabilitySuccess">
-      <mat-form-field>
-        <input matInput [(ngModel)]="state.stackEndpoint" [errorStateMatcher]="stackEndpointErrorStateMatcher" placeholder="Stack Endpoint"/>
-        <mat-error>Stack Endpoint Not Available</mat-error>
+  </div>
+
+  <div class="camera-discovery-container" *ngIf="state.stackAvailabilitySuccess">
+    <div class="buttons-container">
+      <button mat-raised-button type="button" [disabled]="state.discoveryLoading || state.provisioningLoading" color="primary" (click)="onDiscover()">Discover Cameras</button>
+      <button *ngIf="!state.addingNewCamera" mat-stroked-button type="button" (click)="onClickAdd()" color="accent"><mat-icon>add_circle_outline</mat-icon>Manual Camera Entry</button>
+    </div>
+
+    <mat-card class="manual-camera-container" *ngIf="state.addingNewCamera">
+      <span class="mat-subheading-2">Manually Add Camera</span>
+      <mat-form-field class="new-camera-form">
+        <input matInput [(ngModel)]="newCamera.ip" [errorStateMatcher]="newCameraIpErrorStateMatcher" placeholder="IP Address"/>
+        <mat-error>Please enter a valid IP address</mat-error>
       </mat-form-field>
-      <mat-form-field>
-        <input matInput [(ngModel)]="state.provisioningKey" [errorStateMatcher]="provisioningKeyErrorStateMatcher" placeholder="Provisioning Key"/>
-        <mat-error>Invalid Provisioning Key</mat-error>
+      <mat-form-field class="new-camera-form">
+        <input matInput [(ngModel)]="newCamera.urn" [errorStateMatcher]="newCameraUrnErrorStateMatcher" placeholder="Unique ID"/>
+        <mat-error>Please enter a unique ID</mat-error>
       </mat-form-field>
-      <div>
-        <mat-spinner *ngIf="state.loading" diameter="32"></mat-spinner>
-        <button mat-stroked-button color="accent" (click)="onConfigureEndpoint()">Save</button>
+      <mat-form-field class="new-camera-form">
+        <input matInput [(ngModel)]="newCamera.name" [errorStateMatcher]="newCameraNameErrorStateMatcher" placeholder="Name"/>
+        <mat-error>Please enter a camera name</mat-error>
+      </mat-form-field>
+      <div class="buttons-container">
+        <button mat-stroked-button type="button" color="warn" (click)="onCancelNew()">Cancel</button>
+        <button mat-stroked-button type="button" color="primary" (click)="onSaveNew()">Save</button>
+      </div>
+    </mat-card>
+
+    <div class="table-container">
+      <table mat-table *ngIf="cameras.length > 0" [dataSource]="cameras">
+        <ng-container matColumnDef="select">
+          <th mat-header-cell *matHeaderCellDef><mat-checkbox></mat-checkbox></th>
+          <td mat-cell *matCellDef="let camera"><mat-checkbox [(ngModel)]="camera.checked" [disabled]="state.provisioningLoading" (ngModelChange)="setAnyCameraChecked()"></mat-checkbox></td>
+        </ng-container>
+        <ng-container matColumnDef="ip">
+          <th mat-header-cell *matHeaderCellDef>IP</th>
+          <td mat-cell *matCellDef="let camera"> {{camera.ip}} </td>
+        </ng-container>
+        <ng-container matColumnDef="urn">
+          <th mat-header-cell *matHeaderCellDef>URN</th>
+          <td mat-cell *matCellDef="let camera"> {{camera.urn}} </td>
+        </ng-container>
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let camera"> {{camera.name}} </td>
+
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let camera">
+            <mat-chip-list>
+              <mat-chip [color]="camera.status === 'UNPAIRED' ? 'accent' : 'primary'">{{camera.status}}</mat-chip>
+            </mat-chip-list>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="status-error">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let camera">
+            <mat-icon *ngIf="camera.workflowError" color="accent" [matTooltip]="camera.workflowErrorMessage">error_outline</mat-icon>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+      <div class="spinner-container">
+        <mat-spinner *ngIf="state.discoveryLoading || state.provisioningLoading" diameter="48"></mat-spinner>
       </div>
     </div>
-    <div class="camera-discovery" *ngIf="state.stackAvailabilitySuccess">
-      <label class="mat-body-2">Status: </label><span class="mat-body-1">{{state.statusMessage}}</span>
-      <div>
-        <span class="mat-body-2">Camera API scheme</span>
-        <mat-radio-group [(ngModel)]="state.cameraApiScheme">
+
+
+    <div *ngIf="cameras.length > 0 " class="camera-authentication-container">
+      <div class="auth-type-container">
+        <span class="mat-subheading-1">Auth Type:</span>
+        <mat-radio-group [(ngModel)]="state.cameraApiScheme" [disabled]="!state.anyCameraChecked">
           <mat-radio-button *ngFor="let scheme of state.cameraApiSchemes" [value]="scheme">
             {{scheme}}
           </mat-radio-button>
         </mat-radio-group>
       </div>
-      <div>
-        <mat-form-field class="camera-credentials-form">
-          <input matInput [(ngModel)]="state.cameraApiUsername" placeholder="Camera API username"/>
+      <div class="camera-credentials">
+        <mat-form-field>
+          <input matInput [(ngModel)]="state.cameraApiUsername" placeholder="Camera API username" [disabled]="!state.anyCameraChecked"/>
         </mat-form-field>
-        <mat-form-field class="camera-credentials-form">
-          <input matInput [(ngModel)]="state.cameraApiPassword" placeholder="Camera API password" type="password"/>
+        <mat-form-field>
+          <input matInput [(ngModel)]="state.cameraApiPassword" placeholder="Camera API password" type="password" [disabled]="!state.anyCameraChecked"/>
         </mat-form-field>
       </div>
-      <div>
-        <button mat-stroked-button [disabled]="state.discoveryLoading || state.provisioningLoading" color="primary" (click)="onDiscover()">Discover Cameras</button>
-        <mat-spinner *ngIf="state.discoveryLoading" diameter="32"></mat-spinner>
-        <button mat-stroked-button [disabled]="state.provisioningLoading || !state.anyCameraChecked" color="accent" (click)="onProvisionCameras()">Provision Selected Cameras</button>
-        <mat-spinner *ngIf="state.provisioningLoading" diameter="32"></mat-spinner>
-      </div>
-      <div>
-        <mat-list>
-          <mat-list-item *ngFor="let camera of cameras">
-            <mat-checkbox [(ngModel)]="camera.checked" [disabled]="state.provisioningLoading" (ngModelChange)="setAnyCameraChecked()">{{camera.ip}} {{camera.urn}} {{camera.name}}</mat-checkbox><span class="mat-body-2">{{camera.status}}</span>
-            <mat-icon *ngIf="camera.workflowError" color="accent" [matTooltip]="camera.workflowErrorMessage">error_outline</mat-icon>
-          </mat-list-item>
-        </mat-list>
-      </div>
-      <div *ngIf="!state.addingNewCamera">
-        <a (click)="onClickAdd()"><span class="mat-body-2">Manual Camera Entry</span><mat-icon color="primary">add_circle_outline</mat-icon></a>
-      </div>
-      <div *ngIf="state.addingNewCamera">
-        <mat-form-field class="new-camera-form">
-          <input matInput [(ngModel)]="newCamera.ip" [errorStateMatcher]="newCameraIpErrorStateMatcher" placeholder="IP Address"/>
-          <mat-error>Please enter a valid IP address</mat-error>
-        </mat-form-field>
-        <mat-form-field class="new-camera-form">
-          <input matInput [(ngModel)]="newCamera.urn" [errorStateMatcher]="newCameraUrnErrorStateMatcher" placeholder="Unique ID"/>
-          <mat-error>Please enter a unique ID</mat-error>
-        </mat-form-field>
-        <mat-form-field class="new-camera-form">
-          <input matInput [(ngModel)]="newCamera.name" [errorStateMatcher]="newCameraNameErrorStateMatcher" placeholder="Name"/>
-          <mat-error>Please enter a camera name</mat-error>
-        </mat-form-field>
-        <a (click)="onSaveNew()"><mat-icon color="primary">check</mat-icon></a>
-        <a (click)="onCancelNew()"><mat-icon color="primary">cancel</mat-icon></a>
-      </div>
+      <button mat-stroked-button [disabled]="state.provisioningLoading || !state.anyCameraChecked" color="accent" (click)="onProvisionCameras()">Provision Selected Cameras</button>
     </div>
-  </mat-card>
-</div>
+
+  </div>
+</mat-card>

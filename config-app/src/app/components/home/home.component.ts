@@ -95,6 +95,7 @@ export class NewCameraErrorStateMatcher implements ErrorStateMatcher {
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
+  displayedColumns: string[] = ['select', 'ip', 'urn', 'name', 'status', 'status-error'];
 
   constructor(private electronService: ElectronService) { }
 
