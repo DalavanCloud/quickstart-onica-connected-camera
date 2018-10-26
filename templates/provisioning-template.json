@@ -307,12 +307,6 @@
                         "Action":[
                            "kinesisvideo:DescribeStream",
                            "kinesisvideo:PutMedia",
-                           "kinesisvideo:ListFragments",
-                           "kinesisvideo:ListStreams",
-                           "kinesisvideo:CreateStream",
-                           "kinesisvideo:UpdateStream",
-                           "kinesisvideo:DeleteStream",
-                           "kinesisvideo:UpdateDataRetention",
                            "kinesisvideo:GetDataEndpoint"
                         ],
                         "Resource":"*",
