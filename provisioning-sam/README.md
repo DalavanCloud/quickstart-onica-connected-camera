@@ -99,7 +99,27 @@ After deployment is complete you can run the following command to retrieve the A
 aws cloudformation describe-stacks \
     --stack-name sam-app \
     --query 'Stacks[].Outputs'
-``` 
+```
+
+## Quickstart Packaging
+
+1. Deploy the provisioning template in CloudFormation using SAM package/deploy.
+2. View the CloudFormation processed template. We need to change the lambda Code location for Quickstart region handling.
+3. Download the lambda code from SAM packaged S3 bucket and write to ../functions/lambda.zip
+4. Replace the lambda function code references in the template as follows:
+```
+"Code":{
+   "S3Bucket":{
+      "Ref":"LambdaZipsBucket"
+   },
+   "S3Key":{
+      "Fn::Sub":"${QSS3KeyPrefix}functions/lambda.zip"
+   }
+}
+```
+5. Copy modified template to ../templates/provisioning.template
+6. Any Parameters and Outputs updates need to be passed through to ../connected-camera-master.template
+7. Check in / PR modified Quickstart
 
 ## Testing
 
