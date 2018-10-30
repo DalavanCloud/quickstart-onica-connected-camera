@@ -221,10 +221,41 @@
                "Statement":[
                   {
                      "Action":[
-                        "iot:Connect",
-                        "iot:Publish"
+                        "iot:Connect"
                      ],
                      "Resource":"*",
+                     "Effect":"Allow"
+                  },
+                  {
+                     "Action":[
+                        "iot:Publish"
+                     ],
+                     "Resource":[
+                        {
+                           "Fn::Join":[
+                              "/",
+                              [
+                                 {
+                                    "Fn::Sub":"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things"
+                                 },
+                                 "${iot:Connection.Thing.ThingName}",
+                                 "*"
+                              ]
+                           ]
+                        },
+                        {
+                           "Fn::Join":[
+                              "/",
+                              [
+                                 {
+                                    "Fn::Sub":"arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/cameras"
+                                 },
+                                 "${iot:Connection.Thing.ThingName}",
+                                 "*"
+                              ]
+                           ]
+                        }
+                     ],
                      "Effect":"Allow"
                   },
                   {
