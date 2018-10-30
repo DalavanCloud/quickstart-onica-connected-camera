@@ -227,8 +227,13 @@ Resources:
         - Effect: Allow
           Action:
           - iot:Connect
-          - iot:Publish
           Resource: "*"
+        - Effect: Allow
+          Action:
+          - iot:Publish
+          Resource:
+            - !Join [ "/" , [ !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things", "${iot:Connection.Thing.ThingName}", "*"]]
+            - !Join [ "/" , [ !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/cameras", "${iot:Connection.Thing.ThingName}", "*"]]
         - Effect: Allow
           Action:
           - iot:assumeRoleWithCertificate
@@ -259,7 +264,7 @@ Resources:
               - kinesisvideo:DescribeStream
               - kinesisvideo:PutMedia
               - kinesisvideo:GetDataEndpoint
-              Resource: "*"
+              Resource: !Join [ "/" , [ !Sub "arn:aws:kinesisvideo:${AWS::Region}:${AWS::AccountId}:stream", "${credentials-iot:ThingName}", "*"]]
 Outputs:
   StackEndpoint:
     Description: "Endpoint base path"
