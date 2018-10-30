@@ -259,7 +259,7 @@ Resources:
               - kinesisvideo:DescribeStream
               - kinesisvideo:PutMedia
               - kinesisvideo:GetDataEndpoint
-              Resource: "*"
+              Resource: !Join [ "/" , [ !Sub "arn:aws:kinesisvideo:${AWS::Region}:${AWS::AccountId}:stream", "${credentials-iot:ThingName}", "*"]]
 Outputs:
   StackEndpoint:
     Description: "Endpoint base path"
