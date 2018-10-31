@@ -4,13 +4,13 @@ const AWS = require("aws-sdk")
 const request = require("request-promise-native")
 const provisioningKeyRepository = require('../repository/provisioningKeyRepository')
 
-
 class ProvisioningService {
 
   constructor() {
     this._iot = new AWS.Iot()
     this._iam = new AWS.IAM()
     this._kinesisVideo = new AWS.KinesisVideo()
+    this._cloudwatch = new AWS.CloudWatch()
   }
 
   async authorize(provisioningKey) {
@@ -81,6 +81,17 @@ class ProvisioningService {
       KMSKeyId = existingStream.StreamInfo.KmsKeyId
     }
 
+    const dataAlarms = await this._cloudwatch.describeAlarms({
+      AlarmNames:[ProvisioningService.streamAlarmName(StreamName)]
+    }).promise()
+    const existingAlarms = dataAlarms.MetricAlarms
+
+    if (!existingAlarms.length) {
+      //create alarm
+      console.log("Creating cloudwatch alarm for video stream.")
+      await this._cloudwatch.putMetricAlarm(ProvisioningService.streamAlarmParams(StreamName)).promise()
+    }
+
     return {
       ThingName: thingName,
       StreamName,
@@ -94,7 +105,31 @@ class ProvisioningService {
     }
   }
 
+  static streamAlarmParams(streamName) {
+    return {
+      AlarmName: ProvisioningService.streamAlarmName(streamName),
+      ActionsEnabled: true,
+      OKActions: [process.env.MonitoringTopicArn],
+      AlarmActions: [process.env.MonitoringTopicArn],
+      MetricName: "PutMedia.IncomingFrames",
+      Namespace: "AWS/KinesisVideo",
+      Statistic: "Sum",
+      Dimensions: [{
+        Name: "StreamName",
+        Value: streamName
+      }],
+      Period: 60,
+      EvaluationPeriods: 1,
+      DatapointsToAlarm: 1,
+      Threshold: 0,
+      ComparisonOperator: 'LessThanOrEqualToThreshold',
+      TreatMissingData: "breaching"
+    }
+  }
 
+  static streamAlarmName(streamName) {
+    return `VideoStream - ${streamName}`
+  }
 }
 
 module.exports = new ProvisioningService()
