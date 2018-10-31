@@ -2,7 +2,7 @@
 
 const AWS = require("aws-sdk")
 
-class MonitoringService {
+class CameraService {
 
   constructor() {
     this._iot = new AWS.Iot()
@@ -18,7 +18,7 @@ class MonitoringService {
     const iot = await this._iotdata
 
     if (!id) {
-      console.log("Missing stream id.")
+      console.log("Missing camera id.")
       return
     }
 
@@ -39,6 +39,23 @@ class MonitoringService {
 
     console.log(`Camera(${id}) shadow updated.`)
   }
+
+  async getShadow(id) {
+    console.log(`getShadow(id = ${id})`)
+
+    const iot = await this._iotdata
+
+    if (!id) {
+      console.log("Missing camera id.")
+      return {}
+    }
+
+    const thingName = id
+    const dataShadow = await iot.getThingShadow({thingName}).promise()
+    const shadow = dataShadow.payload
+
+    return JSON.parse(shadow)
+  }
 }
 
-module.exports = new MonitoringService()
+module.exports = new CameraService()
