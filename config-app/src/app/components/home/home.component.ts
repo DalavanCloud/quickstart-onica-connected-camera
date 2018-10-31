@@ -95,7 +95,7 @@ export class NewCameraErrorStateMatcher implements ErrorStateMatcher {
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-  displayedColumns: string[] = ['select', 'ip', 'urn', 'name', 'status', 'status-error'];
+  displayedColumns: string[] = ['select', 'ip', 'urn', 'name', 'status', 'streaming', 'status-error'];
 
   constructor(private electronService: ElectronService) { }
 
@@ -176,7 +176,7 @@ export class HomeComponent implements OnInit {
     this.setCameras([])
     this.state.discoveryLoading = true;
     this.state.statusMessage = "Discovering cameras"
-    this.electronService.discoverCameras()
+    this.electronService.discoverCameras(this.state.stackEndpoint, this.state.provisioningKey)
       .then(cameras => {
         this.state.discoveryLoading = false
         this.state.statusMessage = cameras.length > 0 ? "Camera discovery completed" : "No cameras found"
