@@ -61,6 +61,8 @@ Resources:
             Ref: IoTCameraPolicy
           CameraStreamingRoleAliasName:
             Fn::GetAtt: RoleAliasCustomResource.roleAlias
+          MonitoringTopicArn:
+            Ref: MonitoringTopic
       Events:
         ProvisionThing:
           Type: Api
@@ -145,6 +147,30 @@ Resources:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
+  #Camera Monitoring
+  MonitoringTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: CameraMonitoringTopic
+      Subscription:
+        - Endpoint:
+            Fn::GetAtt: MonitoringLambdaFunction.Arn
+          Protocol: lambda
+  MonitoringLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: handler.monitoring
+      Runtime: nodejs8.10
+      Role:
+        Fn::GetAtt: ProvisioningLambdaRole.Arn
+  MonitoringLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref MonitoringLambdaFunction
+      Principal: sns.amazonaws.com
+
   # Lambda Role
   ProvisioningLambdaRole:
     Type: AWS::IAM::Role
@@ -193,6 +219,17 @@ Resources:
                   - iot:DescribeRoleAlias
                   - iot:CreateRoleAlias
                   - iot:UpdateRoleAlias
+                  - iot:UpdateThingShadow
+                Resource: "*"
+        - PolicyName: CloudWatchPolicy
+          # CloudWatch policy to allow creating alarms form KinesisVideo
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricAlarm
+                  - cloudwatch:DescribeAlarms
                 Resource: "*"
         - PolicyName: KinesisVideoPolicy
           # Permission to provision video stream

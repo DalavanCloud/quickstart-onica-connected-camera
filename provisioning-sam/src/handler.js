@@ -1,4 +1,5 @@
 const provisioningService = require('./service/provisioningService')
+const monitoringService = require('./service/monitoringService')
 
 /**
  *
@@ -89,5 +90,22 @@ exports.provisionThing = async (event, context) => {
       statusCode: 500,
       body: JSON.stringify({message: err.message, stack: err.stack})
     }
+  }
+}
+
+/**
+ * Monitor the state of the stream. The event is a CloudWatch Alarm via SNS.
+ */
+exports.monitoring = async (event, context) => {
+  try {
+    for (let record of event.Records) {
+      const alarm = JSON.parse(record.Sns.Message)
+      const id = alarm.Trigger.Dimensions.filter(d => 'StreamName' == d.name).map(d => d.value)[0]
+
+      await monitoringService.setStreaming(id, 'OK' == alarm.NewStateValue)
+    }
+  } catch (err) {
+    console.log(JSON.stringify(event))
+    console.log(err)
   }
 }
