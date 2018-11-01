@@ -724,7 +724,7 @@
          "Type":"AWS::ApiGateway::Stage",
          "Properties":{
             "DeploymentId":{
-               "Ref":"ServerlessRestApiDeployment5ad90b20dc"
+               "Ref":"ServerlessRestApiDeployment"
             },
             "RestApiId":{
                "Ref":"ServerlessRestApi"
@@ -807,13 +807,12 @@
             }
          }
       },
-      "ServerlessRestApiDeployment5ad90b20dc":{
+      "ServerlessRestApiDeployment":{
          "Type":"AWS::ApiGateway::Deployment",
          "Properties":{
             "RestApiId":{
                "Ref":"ServerlessRestApi"
             },
-            "Description":"RestApi deployment id: 5ad90b20dcf88554d3ff3ea4d4f22a95781ad42d",
             "StageName":"Stage"
          }
       },
