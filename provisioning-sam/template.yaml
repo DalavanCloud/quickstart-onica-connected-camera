@@ -99,6 +99,20 @@ Resources:
           Properties:
             Path: /pair
             Method: put
+  CameraShadowLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: cameraHandler.shadow
+      Runtime: nodejs8.10
+      Role:
+        Fn::GetAtt: ProvisioningLambdaRole.Arn
+      Events:
+        CameraPairing:
+          Type: Api
+          Properties:
+            Path: /cameras/{id}/shadow
+            Method: get
 
   #CF Role Alias custom resource
   RoleAliasFunction:
@@ -219,6 +233,7 @@ Resources:
                   - iot:DescribeRoleAlias
                   - iot:CreateRoleAlias
                   - iot:UpdateRoleAlias
+                  - iot:GetThingShadow
                   - iot:UpdateThingShadow
                 Resource: "*"
         - PolicyName: CloudWatchPolicy

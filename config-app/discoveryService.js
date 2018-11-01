@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
 var onvif = require('node-onvif');
 var url = require('url');
+var request = require('request-promise-native');
 /**
  * Discovery service in main process (onvif)
  */
@@ -22,7 +23,21 @@ var DiscoveryService = /** @class */ (function () {
         onvif.startProbe().then(function (device_info_list) {
             console.log(device_info_list.length + ' devices were found.');
             var cameras = _this._processDeviceInfoList(device_info_list);
-            event.sender.send('discover-response', cameras);
+            var shadows = cameras.map(function (camera) {
+                return _this._checkShadow(event, args, camera).then(function (shadow) {
+                    try {
+                        camera.streaming = shadow.state.reported.streaming;
+                    }
+                    catch (err) {
+                        console.log(err);
+                        camera.streaming = false;
+                    }
+                    return camera;
+                });
+            });
+            Promise.all(shadows).then(function () {
+                event.sender.send('discover-response', cameras);
+            });
         }).catch(function (error) {
             console.log("ERROR discovering");
             console.log(error);
@@ -41,6 +56,29 @@ var DiscoveryService = /** @class */ (function () {
             var ip = url.parse(device.xaddrs[0]).hostname;
             var status = "UNPAIRED"; //TODO getStatus
             return { urn: urn, name: name, ip: ip, status: status };
+        });
+    };
+    DiscoveryService.prototype._checkShadow = function (event, args, camera) {
+        console.log('check shadow', camera.urn);
+        var url = (args.stackEndpoint || '').trim() + "/cameras/" + camera.urn + '/shadow';
+        var Authorization = (args.provisioningKey || '').trim();
+        return request({
+            url: url,
+            method: 'get',
+            headers: {
+                Authorization: Authorization
+            }
+        }).then(function (result) {
+            console.log("Shadow acquired");
+            console.log(result);
+            return JSON.parse(result);
+        }).catch(function (err) {
+            console.log("Failure to get camera shadow");
+            console.log(err);
+            console.log(err.name);
+            console.log(err.statusCode);
+            console.log(err.message);
+            throw err;
         });
     };
     return DiscoveryService;

@@ -99,7 +99,7 @@ export class ElectronService {
       })
   }
 
-  discoverCameras(): Promise<Camera[]> {
+  discoverCameras(stackEndpoint, provisioningKey): Promise<Camera[]> {
     return new Promise((resolve, reject) => {
       console.log('electron service discover')
       this.ipcRenderer.once('discover-response', (event, arg) => {
@@ -108,7 +108,7 @@ export class ElectronService {
         console.log(arg)
         resolve(arg)
       })
-      this.ipcRenderer.send('discover-request', 'ping')
+      this.ipcRenderer.send('discover-request', {stackEndpoint, provisioningKey})
     })
   }
 

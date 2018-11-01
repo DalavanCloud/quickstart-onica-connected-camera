@@ -1,5 +1,5 @@
 const provisioningService = require('./service/provisioningService')
-const monitoringService = require('./service/monitoringService')
+const cameraService = require('./service/cameraService')
 
 /**
  *
@@ -102,7 +102,7 @@ exports.monitoring = async (event, context) => {
       const alarm = JSON.parse(record.Sns.Message)
       const id = alarm.Trigger.Dimensions.filter(d => 'StreamName' == d.name).map(d => d.value)[0]
 
-      await monitoringService.setStreaming(id, 'OK' == alarm.NewStateValue)
+      await cameraService.setStreaming(id, 'OK' == alarm.NewStateValue)
     }
   } catch (err) {
     console.log(JSON.stringify(event))

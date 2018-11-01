@@ -1,3 +1,6 @@
+const provisioningService = require('./service/provisioningService')
+const cameraService = require('./service/cameraService')
+
 /**
  * Stub api for get status on camera.
  */
@@ -45,6 +48,34 @@ exports.pair = async (event, context) => {
     return {
       statusCode: 500,
       body: JSON.stringify({Status: "ERROR", "Error": err.message})
+    }
+  }
+}
+
+exports.shadow = async (event, context) => {
+  try {
+    const headers = event.headers || {}
+    const authorized = await provisioningService.authorize(headers.Authorization)
+
+    if (!authorized) {
+      return {
+        statusCode: 403,
+        body: JSON.stringify({message: "Invalid Provisioning Key."})
+      }
+    } else {
+      const id = event.pathParameters.id
+      const shadow = await cameraService.getShadow(id)
+
+      return {
+        statusCode: 200,
+        body: JSON.stringify(shadow)
+      }
+    }
+  } catch (err) {
+    console.log(err)
+    return {
+      statusCode: 500,
+      body: JSON.stringify({message: err.message, stack: err.stack})
     }
   }
 }
