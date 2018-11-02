@@ -63,8 +63,9 @@ class ProvisioningService {
 
     //iot credential endpoint for role alias
     const credentialEndpoint = await this._iot.describeEndpoint({endpointType: "iot:CredentialProvider"}).promise()
-    const roleAlias = process.env.CameraStreamingRoleAliasName
-    const IoTCredentialUrl = `https://${credentialEndpoint.endpointAddress}/role-aliases/${roleAlias}/credentials`
+    const IoTCredentialRoleAlias = process.env.CameraStreamingRoleAliasName
+    const IoTCredentialEndpoint = `https://${credentialEndpoint.endpointAddress}`
+    const IoTCredentialUrl = `${IoTCredentialEndpoint}/role-aliases/${IoTCredentialRoleAlias}/credentials`
 
     //create stream
     const StreamName = thingName
@@ -101,6 +102,8 @@ class ProvisioningService {
       IoTCACert,
       IoTEndpointUrl,
       IoTCredentialUrl,
+      IoTCredentialEndpoint,
+      IoTCredentialRoleAlias,
       KMSKeyId
     }
   }
