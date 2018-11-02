@@ -117,9 +117,18 @@ aws cloudformation describe-stacks \
    }
 }
 ```
-5. Copy modified template to ../templates/provisioning.template
-6. Any Parameters and Outputs updates need to be passed through to ../connected-camera-master.template
-7. Check in / PR modified Quickstart
+5. Remove the generate value from resource name:
+  "ServerlessRestApiDeployment5ad90b20dc" -> "ServerlessRestApiDeployment"
+
+  Remove the description from the resource:
+  "Description":"RestApi deployment id: 5ad90b20dcf88554d3ff3ea4d4f22a95781ad42d",
+
+  Update the references to the resource:
+  "Ref":"ServerlessRestApiDeployment5ad90b20dc" -> "Ref":"ServerlessRestApiDeployment"
+
+6. Copy modified template to ../templates/provisioning.template
+7. Any Parameters and Outputs updates need to be passed through to ../connected-camera-master.template
+8. Check in / PR modified Quickstart
 
 ## Testing
 
