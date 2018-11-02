@@ -439,18 +439,9 @@
                            "kinesisvideo:PutMedia",
                            "kinesisvideo:GetDataEndpoint"
                         ],
-                        "Resource":{
-                           "Fn::Join":[
-                              "/",
-                              [
-                                 {
-                                    "Fn::Sub":"arn:aws:kinesisvideo:${AWS::Region}:${AWS::AccountId}:stream"
-                                 },
-                                 "${credentials-iot:ThingName}",
-                                 "*"
-                              ]
-                           ]
-                        },
+                        "Resource":[
+                           "*"
+                        ],
                         "Effect":"Allow"
                      }
                   }
