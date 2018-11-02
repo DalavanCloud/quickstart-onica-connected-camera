@@ -313,10 +313,11 @@ Resources:
             Statement:
               Effect: Allow
               Action:
-              - kinesisvideo:DescribeStream
-              - kinesisvideo:PutMedia
-              - kinesisvideo:GetDataEndpoint
-              Resource: !Join [ "/" , [ !Sub "arn:aws:kinesisvideo:${AWS::Region}:${AWS::AccountId}:stream", "${credentials-iot:ThingName}", "*"]]
+                - kinesisvideo:DescribeStream
+                - kinesisvideo:PutMedia
+                - kinesisvideo:GetDataEndpoint
+              Resource:
+                - "*"
 Outputs:
   StackEndpoint:
     Description: "Endpoint base path"
