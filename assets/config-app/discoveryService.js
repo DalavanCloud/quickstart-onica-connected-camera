@@ -33,6 +33,8 @@ var DiscoveryService = /** @class */ (function () {
                         camera.streaming = false;
                     }
                     return camera;
+                }).catch(function (err) {
+                    camera.streaming = false;
                 });
             });
             Promise.all(shadows).then(function () {

@@ -32,6 +32,8 @@ export class DiscoveryService {
           }
 
           return camera;
+        }).catch(err => {
+            camera.streaming = false;
         });
       });
 
