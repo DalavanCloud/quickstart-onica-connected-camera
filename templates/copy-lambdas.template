@@ -30,7 +30,7 @@
                     "Ref": "LambdaZipsBucket"
                 },
                 "Objects": [
-                    "functions/lambda.zip"
+                    "functions/packages/lambda.zip"
                 ],
                 "SourceBucket": {
                     "Ref": "QSS3BucketName"
