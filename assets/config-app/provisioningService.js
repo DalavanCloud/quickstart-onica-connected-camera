@@ -98,7 +98,7 @@ var ProvisioningService = /** @class */ (function () {
         console.log(url);
         //camera Basic auth
         var Authorization;
-        if (args.camera.cameraApiUsername.length > 0 && args.camera.cameraApiPassword.length > 0) {
+        if (args.camera.cameraApiUsername.length > 0 || args.camera.cameraApiPassword.length > 0) {
             console.log("Including camera authentication.");
             Authorization = "Basic " + Buffer.from(args.camera.cameraApiUsername + ":" + args.camera.cameraApiPassword).toString('base64');
             console.log(Authorization);
