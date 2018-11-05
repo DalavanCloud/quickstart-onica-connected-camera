@@ -1,0 +1,22 @@
+global:
+  marketplace-ami: false
+  owner: quickstart-eng@amazon.com
+  qsname: quickstart-onica-connected-camera
+  regions:
+    - ap-northeast-1
+    # - ap-northeast-2 - down
+    - ap-south-1
+    # - ap-southeast-1 - down
+    - ap-southeast-2
+    - eu-central-1
+    - eu-west-1
+    - eu-west-2
+    - us-east-1
+    - us-east-2
+    - us-west-2
+  reporting: true
+
+tests:
+  quickstart-onica-connected-camerat:
+    parameter_input: connected-camera-master.json
+    template_file: connected-camera-master.template
