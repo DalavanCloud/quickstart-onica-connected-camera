@@ -104,8 +104,8 @@ aws cloudformation describe-stacks \
 ## Quickstart Packaging
 
 1. Deploy the provisioning template in CloudFormation using SAM package/deploy.
-2. View the CloudFormation processed template. We need to change the lambda Code location for Quickstart region handling.
-3. Download the lambda code from SAM packaged S3 bucket and write to ../functions/lambda.zip
+2. Run ./scripts/qs-lambda-package.sh to package the lambda code into the functions quickstart directory.
+3. View the CloudFormation processed template. We need to change the lambda Code location for Quickstart region handling.
 4. Replace the lambda function code references in the template as follows:
 ```
 "Code":{
@@ -113,7 +113,7 @@ aws cloudformation describe-stacks \
       "Ref":"LambdaZipsBucket"
    },
    "S3Key":{
-      "Fn::Sub":"${QSS3KeyPrefix}functions/lambda.zip"
+      "Fn::Sub":"${QSS3KeyPrefix}functions/packages/lambda.zip"
    }
 }
 ```
