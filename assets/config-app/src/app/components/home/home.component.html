@@ -68,7 +68,7 @@
           <th mat-header-cell *matHeaderCellDef>Status</th>
           <td mat-cell *matCellDef="let camera">
             <mat-chip-list>
-              <mat-chip [color]="camera.status === 'UNPAIRED' ? 'accent' : 'primary'">{{camera.status}}</mat-chip>
+              <mat-chip [color]="camera.status === 'UNPAIRED' ? 'accent' : 'primary'" (click)="checkCameraStatus(camera)">{{camera.status}}</mat-chip>
             </mat-chip-list>
           </td>
         </ng-container>

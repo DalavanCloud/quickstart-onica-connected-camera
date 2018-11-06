@@ -3,11 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var electron_1 = require("electron");
 //const url = require('url');
 var request = require('request-promise-native');
+var discoveryService_1 = require("./discoveryService");
 /**
  * Provisioning service in main process
  */
 var ProvisioningService = /** @class */ (function () {
     function ProvisioningService() {
+        this.discoveryService = new discoveryService_1.DiscoveryService();
     }
     ProvisioningService.prototype.registerMainProcessIPC = function () {
         electron_1.ipcMain.on('check-stack-endpoint-request', this.checkStackEndpoint.bind(this));
@@ -60,7 +62,9 @@ var ProvisioningService = /** @class */ (function () {
         })
             .catch(function (err) {
             console.log("Provisioning error.");
-            event.sender.send('provision-camera-response', { camera: args.camera, error: true, errorMessage: "Provisioning failure in " + err.step + " step: " + err.message });
+            args.camera.workflowError = true;
+            args.camera.workflowErrorMessage = "Provisioning failure in " + err.step + " step: " + err.message;
+            event.sender.send('provision-camera-response', { camera: args.camera });
         });
     };
     ProvisioningService.prototype.provisionCloudStep = function (event, args) {
@@ -92,6 +96,7 @@ var ProvisioningService = /** @class */ (function () {
         });
     };
     ProvisioningService.prototype.provisionCameraStep = function (event, args, thing) {
+        var _this = this;
         console.log("camera step");
         //camera pairing url
         var url = args.camera.cameraApiScheme + "://" + args.camera.ip + "/provisioning/pair";
@@ -120,7 +125,9 @@ var ProvisioningService = /** @class */ (function () {
         }).then(function (result) {
             console.log("Provisioning success in camera step!");
             console.log(result);
-            return result;
+            //assume PAIRED status after successful api call, and check camera status api.
+            args.camera.status = 'PAIRED';
+            return _this.discoveryService.updateCameraStatus({ camera: args.camera });
         }).catch(function (err) {
             console.log("Provisioning failure in camera step!");
             console.log(err);

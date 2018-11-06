@@ -11,6 +11,7 @@ export class DiscoveryService {
   registerMainProcessIPC() {
     console.log("setupDiscovery")
     ipcMain.on('discover-request', this.discover.bind(this))
+    ipcMain.on('status-request', this.statusRequest.bind(this))
   }
 
   /**
@@ -21,6 +22,14 @@ export class DiscoveryService {
     onvif.startProbe().then((device_info_list) => {
       console.log(device_info_list.length + ' devices were found.');
       const cameras = this._processDeviceInfoList(device_info_list)
+
+      //check discovered cameras reported status
+      const cameraStatusPromises = cameras.map(camera => {
+        camera.cameraApiScheme = args.cameraApiScheme
+        camera.cameraApiUsername = args.cameraApiUsername
+        camera.cameraApiPassword = args.cameraApiPassword
+        return this.updateCameraStatus({camera})
+      })
 
       const shadows = cameras.map(camera => {
         return this._checkShadow(event, args, camera).then(shadow => {
@@ -37,7 +46,7 @@ export class DiscoveryService {
         });
       });
 
-      Promise.all(shadows).then(() => {
+      Promise.all([...cameraStatusPromises, ...shadows]).then(() => {
         event.sender.send('discover-response', cameras)
       });
 
@@ -86,6 +95,72 @@ export class DiscoveryService {
       console.log(err.statusCode)
       console.log(err.message)
       throw err
+    })
+  }
+
+  statusRequest(event, args) {
+    console.log("main process received status request.")
+    this.updateCameraStatus(args).then(() => {
+      console.log("finished checking camera status.")
+      console.log(args)
+      event.sender.send('status-response', args)
+    })
+  }
+
+  /**
+   * @param args {camera}
+   * Updates camera.status and camera.workflowError in place upon retrieving status from camera api.
+   */
+  updateCameraStatus(args) {
+    console.log("checking camera status")
+    console.log(args.camera)
+
+    //camera pairing url
+    const url = `${args.camera.cameraApiScheme}://${args.camera.ip}/provisioning/status`
+    console.log(url)
+
+    //camera Basic auth
+    let Authorization
+    if (args.camera.cameraApiUsername.length > 0 || args.camera.cameraApiPassword.length > 0) {
+      console.log("Including camera authentication.")
+      Authorization = "Basic " + Buffer.from(`${args.camera.cameraApiUsername}:${args.camera.cameraApiPassword}`).toString('base64')
+      console.log(Authorization)
+    } else {
+      console.log("Skipping camera authentication.")
+    }
+
+    //provisioning docs mistakenly specified 'Authentication' header, so provide both
+    const Authentication = Authorization
+
+    //provide provisioned thing data via camera pairing api
+    return request({
+      url,
+      method: 'get',
+      headers: {
+        Authorization,
+        Authentication
+      },
+      //body: JSON.stringify(thing)
+    }).then(result => {
+      console.log("Got camera status from camera api!")
+      console.log(result)
+      return JSON.parse(result)
+    }).then(result => {
+      if (result.Status != null && result.Status.length > 0) {
+        args.camera.status = result.Status
+        if (result.Error != null && result.Error.length > 0) {
+          console.log("Camera status api returned an error message: " + result.Error)
+          args.camera.workflowError = true
+          args.camera.workflowErrorMessage = result.Error
+        }
+      }
+    }).catch(err => {
+      //camera may not have implemented this api, just leave status as is in that case.
+      console.log("Unable to get camera status from camera api!")
+      console.log(err)
+      console.log(err.name)
+      console.log(err.statusCode)
+      console.log(err.message)
     })
   }
 }
