@@ -23,7 +23,7 @@
                   "Ref":"LambdaZipsBucket"
                },
                "S3Key":{
-                  "Fn::Sub":"${QSS3KeyPrefix}functions/lambda.zip"
+                  "Fn::Sub":"${QSS3KeyPrefix}functions/packages/lambda.zip"
                }
             },
             "Tags":[
@@ -332,7 +332,7 @@
                   "Ref":"LambdaZipsBucket"
                },
                "S3Key":{
-                  "Fn::Sub":"${QSS3KeyPrefix}functions/lambda.zip"
+                  "Fn::Sub":"${QSS3KeyPrefix}functions/packages/lambda.zip"
                }
             },
             "Tags":[
@@ -376,7 +376,7 @@
                   "Ref":"LambdaZipsBucket"
                },
                "S3Key":{
-                  "Fn::Sub":"${QSS3KeyPrefix}functions/lambda.zip"
+                  "Fn::Sub":"${QSS3KeyPrefix}functions/packages/lambda.zip"
                }
             },
             "Tags":[
@@ -437,7 +437,10 @@
                         "Action":[
                            "kinesisvideo:DescribeStream",
                            "kinesisvideo:PutMedia",
-                           "kinesisvideo:GetDataEndpoint"
+                           "kinesisvideo:GetDataEndpoint",
+                           "kinesisvideo:TagStream",
+                           "kinesisvideo:UntagStream",
+                           "kinesisvideo:ListTagsForStream"
                         ],
                         "Resource":[
                            "*"
@@ -488,7 +491,7 @@
                   "Ref":"LambdaZipsBucket"
                },
                "S3Key":{
-                  "Fn::Sub":"${QSS3KeyPrefix}functions/lambda.zip"
+                  "Fn::Sub":"${QSS3KeyPrefix}functions/packages/lambda.zip"
                }
             },
             "Tags":[
@@ -523,7 +526,7 @@
                   "Ref":"LambdaZipsBucket"
                },
                "S3Key":{
-                  "Fn::Sub":"${QSS3KeyPrefix}functions/lambda.zip"
+                  "Fn::Sub":"${QSS3KeyPrefix}functions/packages/lambda.zip"
                }
             },
             "Tags":[
@@ -579,7 +582,7 @@
                   "Ref":"LambdaZipsBucket"
                },
                "S3Key":{
-                  "Fn::Sub":"${QSS3KeyPrefix}functions/lambda.zip"
+                  "Fn::Sub":"${QSS3KeyPrefix}functions/packages/lambda.zip"
                }
             },
             "Tags":[
@@ -628,7 +631,7 @@
                   "Ref":"LambdaZipsBucket"
                },
                "S3Key":{
-                  "Fn::Sub":"${QSS3KeyPrefix}functions/lambda.zip"
+                  "Fn::Sub":"${QSS3KeyPrefix}functions/packages/lambda.zip"
                }
             },
             "Tags":[
@@ -663,7 +666,7 @@
                   "Ref":"LambdaZipsBucket"
                },
                "S3Key":{
-                  "Fn::Sub":"${QSS3KeyPrefix}functions/lambda.zip"
+                  "Fn::Sub":"${QSS3KeyPrefix}functions/packages/lambda.zip"
                }
             },
             "Tags":[

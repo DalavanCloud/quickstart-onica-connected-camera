@@ -316,6 +316,9 @@ Resources:
                 - kinesisvideo:DescribeStream
                 - kinesisvideo:PutMedia
                 - kinesisvideo:GetDataEndpoint
+                - kinesisvideo:TagStream
+                - kinesisvideo:UntagStream
+                - kinesisvideo:ListTagsForStream
               Resource:
                 - "*"
 Outputs:
