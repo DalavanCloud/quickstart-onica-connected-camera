@@ -95,10 +95,10 @@
     </div>
 
 
-    <div *ngIf="cameras.length > 0 " class="camera-authentication-container">
+    <div class="camera-authentication-container">
       <div class="auth-type-container">
         <span class="mat-subheading-1">Camera provisioning APIs:</span>
-        <mat-radio-group [(ngModel)]="state.cameraApiScheme" [disabled]="!state.anyCameraChecked">
+        <mat-radio-group [(ngModel)]="state.cameraApiScheme">
           <mat-radio-button *ngFor="let scheme of state.cameraApiSchemes" [value]="scheme">
             {{scheme}}
           </mat-radio-button>
@@ -106,10 +106,10 @@
       </div>
       <div class="camera-credentials">
         <mat-form-field>
-          <input matInput [(ngModel)]="state.cameraApiUsername" placeholder="Camera API username" [disabled]="!state.anyCameraChecked"/>
+          <input matInput [(ngModel)]="state.cameraApiUsername" placeholder="Camera API username"/>
         </mat-form-field>
         <mat-form-field>
-          <input matInput [(ngModel)]="state.cameraApiPassword" placeholder="Camera API password" type="password" [disabled]="!state.anyCameraChecked"/>
+          <input matInput [(ngModel)]="state.cameraApiPassword" placeholder="Camera API password" type="password"/>
         </mat-form-field>
       </div>
       <button mat-stroked-button [disabled]="state.provisioningLoading || !state.anyCameraChecked" color="accent" (click)="onProvisionCameras()">Provision Selected Cameras</button>

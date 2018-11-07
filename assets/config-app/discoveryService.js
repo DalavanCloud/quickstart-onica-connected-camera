@@ -149,6 +149,12 @@ var DiscoveryService = /** @class */ (function () {
             console.log(err.name);
             console.log(err.statusCode);
             console.log(err.message);
+            //if we get an auth error, it likely means camera api username/password is incorrect
+            //leave default status but highlight the potential error.
+            if (err.statusCode == 401 || err.statusCode == 403) {
+                args.camera.workflowError = true;
+                args.camera.workflowErrorMessage = "Unable to determine status: received authentication error from camera. Check camera api username/password.";
+            }
         });
     };
     return DiscoveryService;

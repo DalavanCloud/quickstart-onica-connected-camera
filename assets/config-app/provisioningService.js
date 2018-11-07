@@ -99,7 +99,7 @@ var ProvisioningService = /** @class */ (function () {
         var _this = this;
         console.log("camera step");
         //camera pairing url
-        var url = args.camera.cameraApiScheme + "://" + args.camera.ip + "/provisioning/pair";
+        var url = args.camera.cameraApiScheme + "://" + args.camera.ip + "/provisioning/pairasdf";
         console.log(url);
         //camera Basic auth
         var Authorization;
@@ -135,6 +135,14 @@ var ProvisioningService = /** @class */ (function () {
             console.log(err.statusCode);
             console.log(err.message);
             err.step = "camera";
+            //if we can't connect, it likely means ip address or camera api scheme (http/https) is incorrect.
+            if (err.name == 'RequestError' && err.status == undefined) {
+                err.message = "Unable to provision camera: unable to connect. Check camera ip address or provisioning api scheme (http/https).";
+            }
+            //if we get an auth error, it likely means camera api username/password is incorrect
+            if (err.statusCode == 401 || err.statusCode == 403) {
+                err.message = "Unable to provision camera: received authentication error from camera. Check camera api username/password.";
+            }
             throw err;
         });
     };

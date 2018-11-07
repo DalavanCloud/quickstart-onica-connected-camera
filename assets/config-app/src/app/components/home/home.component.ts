@@ -249,6 +249,8 @@ export class HomeComponent implements OnInit {
     camera.cameraApiScheme = this.state.cameraApiScheme
     camera.cameraApiUsername = this.state.cameraApiUsername
     camera.cameraApiPassword = this.state.cameraApiPassword
+    camera.workflowError = false
+    camera.workflowErrorMessage = undefined
     this.electronService.checkCameraStatus(camera)
   }
 
