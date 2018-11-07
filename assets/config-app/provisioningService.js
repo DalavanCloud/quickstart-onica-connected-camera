@@ -99,7 +99,7 @@ var ProvisioningService = /** @class */ (function () {
         var _this = this;
         console.log("camera step");
         //camera pairing url
-        var url = args.camera.cameraApiScheme + "://" + args.camera.ip + "/provisioning/pairasdf";
+        var url = args.camera.cameraApiScheme + "://" + args.camera.ip + "/provisioning/pair";
         console.log(url);
         //camera Basic auth
         var Authorization;
