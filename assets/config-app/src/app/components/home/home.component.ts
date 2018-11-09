@@ -176,7 +176,7 @@ export class HomeComponent implements OnInit {
     this.setCameras([])
     this.state.discoveryLoading = true;
     this.state.statusMessage = "Discovering cameras"
-    this.electronService.discoverCameras(this.state.stackEndpoint, this.state.provisioningKey)
+    this.electronService.discoverCameras(this.state.stackEndpoint, this.state.provisioningKey, this.state.cameraApiScheme, this.state.cameraApiUsername, this.state.cameraApiPassword)
       .then(cameras => {
         this.state.discoveryLoading = false
         this.state.statusMessage = cameras.length > 0 ? "Camera discovery completed" : "No cameras found"
@@ -232,7 +232,6 @@ export class HomeComponent implements OnInit {
             if (camera.workflowError) {
               success = false
             } else {
-              camera.status = "PAIRED"
               camera.checked = false
             }
           })
@@ -243,6 +242,16 @@ export class HomeComponent implements OnInit {
     } else {
       this.state.statusMessage = "No cameras selected"
     }
+  }
+
+  checkCameraStatus(camera) {
+    console.log("check camera status")
+    camera.cameraApiScheme = this.state.cameraApiScheme
+    camera.cameraApiUsername = this.state.cameraApiUsername
+    camera.cameraApiPassword = this.state.cameraApiPassword
+    camera.workflowError = false
+    camera.workflowErrorMessage = undefined
+    this.electronService.checkCameraStatus(camera)
   }
 
   /**
@@ -266,12 +275,16 @@ export class HomeComponent implements OnInit {
       this.newCamera.status = 'UNPAIRED'
       this.newCamera.checked = true
 
+      //fire request to determine actual status if we can
+      this.checkCameraStatus(this.newCamera)
+
       //bug in table datasource requires replacement to update
       //this.cameras.push(this.newCamera)
       this.cameras = [...this.cameras, this.newCamera]
 
       this.setAnyCameraChecked()
       this.onCancelNew()
+
     }
   }
 

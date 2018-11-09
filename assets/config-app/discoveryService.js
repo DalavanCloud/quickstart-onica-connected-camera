@@ -13,6 +13,7 @@ var DiscoveryService = /** @class */ (function () {
     DiscoveryService.prototype.registerMainProcessIPC = function () {
         console.log("setupDiscovery");
         electron_1.ipcMain.on('discover-request', this.discover.bind(this));
+        electron_1.ipcMain.on('status-request', this.statusRequest.bind(this));
     };
     /**
      * @param args irrelevant.
@@ -23,6 +24,13 @@ var DiscoveryService = /** @class */ (function () {
         onvif.startProbe().then(function (device_info_list) {
             console.log(device_info_list.length + ' devices were found.');
             var cameras = _this._processDeviceInfoList(device_info_list);
+            //check discovered cameras reported status
+            var cameraStatusPromises = cameras.map(function (camera) {
+                camera.cameraApiScheme = args.cameraApiScheme;
+                camera.cameraApiUsername = args.cameraApiUsername;
+                camera.cameraApiPassword = args.cameraApiPassword;
+                return _this.updateCameraStatus({ camera: camera });
+            });
             var shadows = cameras.map(function (camera) {
                 return _this._checkShadow(event, args, camera).then(function (shadow) {
                     try {
@@ -37,7 +45,7 @@ var DiscoveryService = /** @class */ (function () {
                     camera.streaming = false;
                 });
             });
-            Promise.all(shadows).then(function () {
+            Promise.all(cameraStatusPromises.concat(shadows)).then(function () {
                 event.sender.send('discover-response', cameras);
             });
         }).catch(function (error) {
@@ -81,6 +89,72 @@ var DiscoveryService = /** @class */ (function () {
             console.log(err.statusCode);
             console.log(err.message);
             throw err;
+        });
+    };
+    DiscoveryService.prototype.statusRequest = function (event, args) {
+        console.log("main process received status request.");
+        this.updateCameraStatus(args).then(function () {
+            console.log("finished checking camera status.");
+            console.log(args);
+            event.sender.send('status-response', args);
+        });
+    };
+    /**
+     * @param args {camera}
+     * Updates camera.status and camera.workflowError in place upon retrieving status from camera api.
+     */
+    DiscoveryService.prototype.updateCameraStatus = function (args) {
+        console.log("checking camera status");
+        console.log(args.camera);
+        //camera pairing url
+        var url = args.camera.cameraApiScheme + "://" + args.camera.ip + "/provisioning/status";
+        console.log(url);
+        //camera Basic auth
+        var Authorization;
+        if (args.camera.cameraApiUsername.length > 0 || args.camera.cameraApiPassword.length > 0) {
+            console.log("Including camera authentication.");
+            Authorization = "Basic " + Buffer.from(args.camera.cameraApiUsername + ":" + args.camera.cameraApiPassword).toString('base64');
+            console.log(Authorization);
+        }
+        else {
+            console.log("Skipping camera authentication.");
+        }
+        //provisioning docs mistakenly specified 'Authentication' header, so provide both
+        var Authentication = Authorization;
+        //provide provisioned thing data via camera pairing api
+        return request({
+            url: url,
+            method: 'get',
+            headers: {
+                Authorization: Authorization,
+                Authentication: Authentication
+            },
+        }).then(function (result) {
+            console.log("Got camera status from camera api!");
+            console.log(result);
+            return JSON.parse(result);
+        }).then(function (result) {
+            if (result.Status != null && result.Status.length > 0) {
+                args.camera.status = result.Status;
+                if (result.Error != null && result.Error.length > 0) {
+                    console.log("Camera status api returned an error message: " + result.Error);
+                    args.camera.workflowError = true;
+                    args.camera.workflowErrorMessage = result.Error;
+                }
+            }
+        }).catch(function (err) {
+            //camera may not have implemented this api, just leave status as is in that case.
+            console.log("Unable to get camera status from camera api!");
+            console.log(err);
+            console.log(err.name);
+            console.log(err.statusCode);
+            console.log(err.message);
+            //if we get an auth error, it likely means camera api username/password is incorrect
+            //leave default status but highlight the potential error.
+            if (err.statusCode == 401 || err.statusCode == 403) {
+                args.camera.workflowError = true;
+                args.camera.workflowErrorMessage = "Unable to determine status: received authentication error from camera. Check camera api username/password.";
+            }
         });
     };
     return DiscoveryService;
