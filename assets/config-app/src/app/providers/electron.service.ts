@@ -75,11 +75,10 @@ export class ElectronService {
         console.log("Error: response for unknown camera " + arg.camera.urn)
       }
 
-      //set error state
-      if (arg.error) {
-        provisioningStatus.camera.workflowError = true
-        provisioningStatus.camera.workflowErrorMessage = arg.errorMessage
-      }
+      //update status
+      provisioningStatus.camera.status = arg.camera.status
+      provisioningStatus.camera.workflowError = arg.camera.workflowError
+      provisioningStatus.camera.workflowErrorMessage = arg.camera.workflowErrorMessage
 
       //complete provisioning promise
       provisioningStatus.resolve()
@@ -99,7 +98,7 @@ export class ElectronService {
       })
   }
 
-  discoverCameras(stackEndpoint, provisioningKey): Promise<Camera[]> {
+  discoverCameras(stackEndpoint, provisioningKey, cameraApiScheme, cameraApiUsername, cameraApiPassword): Promise<Camera[]> {
     return new Promise((resolve, reject) => {
       console.log('electron service discover')
       this.ipcRenderer.once('discover-response', (event, arg) => {
@@ -108,7 +107,27 @@ export class ElectronService {
         console.log(arg)
         resolve(arg)
       })
-      this.ipcRenderer.send('discover-request', {stackEndpoint, provisioningKey})
+      this.ipcRenderer.send('discover-request', {stackEndpoint, provisioningKey, cameraApiScheme, cameraApiUsername, cameraApiPassword})
+    })
+  }
+
+  checkCameraStatus(camera): Promise<void> {
+    return Promise.resolve().then(() => {
+      console.log(`Checking camera status ${camera.urn} currently in ${camera.status}`)
+      this.ipcRenderer.once('status-response', (event, arg) => {
+        console.log("got status-response..")
+        console.log(event)
+        console.log(arg)
+        if (camera.urn == arg.camera.urn) {
+          console.log(`Camera status updated from ${camera.status} to ${arg.camera.status}`)
+          camera.status = arg.camera.status
+          camera.workflowError = arg.camera.workflowError
+          camera.workflowErrorMessage = arg.camera.workflowErrorMessage
+        } else {
+          console.log("WARNING: ignoring status update for unexpected camera.")
+        }
+      })
+      this.ipcRenderer.send('status-request', {camera})
     })
   }
 

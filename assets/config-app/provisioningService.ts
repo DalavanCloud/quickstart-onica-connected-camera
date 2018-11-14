@@ -2,10 +2,18 @@ import { ipcMain } from 'electron';
 //const url = require('url');
 const request = require('request-promise-native')
 
+import { DiscoveryService } from './discoveryService';
+
 /**
  * Provisioning service in main process
  */
 export class ProvisioningService {
+
+  discoveryService: DiscoveryService;
+
+  constructor() {
+    this.discoveryService = new DiscoveryService()
+  }
 
   registerMainProcessIPC() {
     ipcMain.on('check-stack-endpoint-request', this.checkStackEndpoint.bind(this))
@@ -61,7 +69,9 @@ export class ProvisioningService {
       })
       .catch(err => {
         console.log("Provisioning error.")
-        event.sender.send('provision-camera-response', {camera: args.camera, error: true, errorMessage: `Provisioning failure in ${err.step} step: ${err.message}`})
+        args.camera.workflowError = true
+        args.camera.workflowErrorMessage = `Provisioning failure in ${err.step} step: ${err.message}`
+        event.sender.send('provision-camera-response', {camera: args.camera})
       })
   }
 
@@ -127,7 +137,10 @@ export class ProvisioningService {
     }).then(result => {
       console.log("Provisioning success in camera step!")
       console.log(result)
-      return result
+
+      //assume PAIRED status after successful api call, and check camera status api.
+      args.camera.status = 'PAIRED'
+      return this.discoveryService.updateCameraStatus({camera: args.camera})
     }).catch(err => {
       console.log("Provisioning failure in camera step!")
       console.log(err)
@@ -135,6 +148,17 @@ export class ProvisioningService {
       console.log(err.statusCode)
       console.log(err.message)
       err.step = "camera"
+
+      //if we can't connect, it likely means ip address or camera api scheme (http/https) is incorrect.
+      if (err.name == 'RequestError' && err.status == undefined) {
+        err.message = "Unable to provision camera: unable to connect. Check camera ip address or provisioning api scheme (http/https)."
+      }
+
+      //if we get an auth error, it likely means camera api username/password is incorrect
+      if (err.statusCode == 401 || err.statusCode == 403) {
+        err.message = "Unable to provision camera: received authentication error from camera. Check camera api username/password."
+      }
+
       throw err
     })
   }
