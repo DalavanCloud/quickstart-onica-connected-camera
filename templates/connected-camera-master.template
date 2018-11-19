@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "AWS Connected Camera Master Template",
+    "Description": "AWS Connected Camera Master Template.  **WARNING** This template creates multiple AWS resources. You will be billed for the AWS resources used if you create a stack from this template. (qp-1or255814)",
     "Metadata": {
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [
